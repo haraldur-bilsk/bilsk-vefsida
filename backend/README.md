@@ -47,6 +47,29 @@ Samkvæmt lýsingunni sem þú fékkst:
    "polling". Þess vegna er sjálfgefið skyndiminni (`CACHE_TTL_SECONDS`) stutt
    (30 sek.) og eingöngu til að milda álagstoppa - ekki til að geyma gögn lengi.
 
+## Sjálfvirk tölvupóstsending fyrir eyðublöð (fyrirspurn/bókun/sala/innflutningur)
+
+Í stað þess að opna tölvupóstforrit notandans (`mailto:`), sendir bakendinn nú
+sjálfur tölvupóst á `bilskurinn@bilsk.is` þegar notandi sendir inn eyðublað á
+síðunni. Þetta keyrir í gegnum Gmail/Google Workspace SMTP.
+
+Uppsetning (þarf að gera einu sinni):
+
+1. Skráðu þig inn á `bilskurinn@bilsk.is` hjá Google (admin.google.com eða
+   venjulegt Gmail-viðmót).
+2. Kveiktu á 2-þátta staðfestingu (2-Step Verification) á reikningnum, ef hún
+   er ekki þegar virk - Google leyfir ekki App Passwords án hennar.
+3. Farðu á https://myaccount.google.com/apppasswords og búðu til nýtt
+   "App Password" (t.d. merkt "Bílskúrinn vefsíða").
+4. Afritaðu 16 stafa lykilorðið sem birtist og settu í `.env` á netþjóninum:
+   `EMAIL_USER=bilskurinn@bilsk.is` og `EMAIL_APP_PASSWORD=<16-stafa-lykillinn>`.
+5. Endurræstu bakendann (`systemctl restart bilsk-backend`).
+
+Ný endapunktar sem eyðublöðin á síðunni senda nú á (í stað mailto:):
+`POST /api/inquiry`, `POST /api/booking`, `POST /api/sell` (með myndaviðhengjum),
+`POST /api/import`. Einföld IP-byggð hraðatakmörkun (mest 10 sendingar á 15 mín.
+á hverja IP) er innbyggð til að verjast ruslsendingum.
+
 ## Hýsing – lykilatriði
 
 Henry hvítlistar IP-tölu, sem þýðir að hýsingin verður að hafa **fasta

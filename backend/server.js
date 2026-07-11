@@ -17,12 +17,61 @@ const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
 const { XMLParser } = require('fast-xml-parser');
+const nodemailer = require('nodemailer');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const CACHE_TTL = Number(process.env.CACHE_TTL_SECONDS || 30) * 1000;
 
 app.use(cors());
+app.use(express.json());
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024, files: 20 },
+});
+
+// ---------------------------------------------------------------------------
+// Tölvupóstsending fyrir fyrirspurnir/bókanir/sölu/innflutning - kemur í stað
+// gömlu mailto:-krækjanna svo notandinn þurfi ekki að opna sinn eigin
+// tölvupóstforrit til að senda erindið.
+// ---------------------------------------------------------------------------
+const mailTransport = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: Number(process.env.EMAIL_PORT || 465),
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_APP_PASSWORD,
+  },
+});
+
+async function sendMail({ subject, text, attachments, replyTo }) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
+    throw new Error('EMAIL_USER / EMAIL_APP_PASSWORD er ekki stillt í .env');
+  }
+  await mailTransport.sendMail({
+    from: `Bílskúrinn vefsíða <${process.env.EMAIL_USER}>`,
+    to: process.env.EMAIL_TO || 'bilskurinn@bilsk.is',
+    replyTo: replyTo || undefined,
+    subject,
+    text,
+    attachments,
+  });
+}
+
+// Einföld vörn gegn ruslsendingum: hámark 10 sendingar á 15 mín. á hverja IP-tölu.
+const submissionLog = new Map();
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const RATE_LIMIT_MAX = 10;
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const arr = (submissionLog.get(ip) || []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  arr.push(now);
+  submissionLog.set(ip, arr);
+  return arr.length <= RATE_LIMIT_MAX;
+}
 
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
 
@@ -122,6 +171,70 @@ app.get('/api/cars/:id', async (req, res) => {
   } catch (err) {
     console.error(`[/api/cars/${req.params.id}] villa:`, err.message);
     res.status(502).json({ error: 'Gat ekki sótt bíl frá Henry API', detail: err.message });
+  }
+});
+
+app.post('/api/inquiry', async (req, res) => {
+  if (!checkRateLimit(req.ip)) return res.status(429).json({ error: 'Of margar sendingar - reyndu aftur síðar.' });
+  try {
+    const { name = '', email = '', phone = '', message = '', carId = '', carName = '' } = req.body || {};
+    if (!name || !(email || phone)) return res.status(400).json({ error: 'Vantar nafn og netfang/símanúmer.' });
+    const text = `Ný fyrirspurn af bilsk.is\n\nNafn: ${name}\nNetfang: ${email}\nSímanúmer: ${phone}\nBíll: ${carName ? carName + ' (' + carId + ')' : '-'}\n\nSkilaboð:\n${message}`;
+    await sendMail({ subject: `Fyrirspurn um ${carName || 'bíl'} - Bílskúrinn`, text, replyTo: email });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[/api/inquiry] villa:', err.message);
+    res.status(502).json({ error: 'Gat ekki sent fyrirspurn.' });
+  }
+});
+
+app.post('/api/booking', async (req, res) => {
+  if (!checkRateLimit(req.ip)) return res.status(429).json({ error: 'Of margar sendingar - reyndu aftur síðar.' });
+  try {
+    const { name = '', email = '', phone = '', date = '', time = '', carId = '', carName = '' } = req.body || {};
+    if (!name || !(email || phone)) return res.status(400).json({ error: 'Vantar nafn og netfang/símanúmer.' });
+    const text = `Ný bókun á skoðun af bilsk.is\n\nNafn: ${name}\nNetfang: ${email}\nSímanúmer: ${phone}\nBíll: ${carName ? carName + ' (' + carId + ')' : '-'}\nDagsetning: ${date}\nTímasetning: ${time}`;
+    await sendMail({ subject: `Bókun á skoðun - ${carName || 'bíll'} - Bílskúrinn`, text, replyTo: email });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[/api/booking] villa:', err.message);
+    res.status(502).json({ error: 'Gat ekki sent bókun.' });
+  }
+});
+
+app.post('/api/import', async (req, res) => {
+  if (!checkRateLimit(req.ip)) return res.status(429).json({ error: 'Of margar sendingar - reyndu aftur síðar.' });
+  try {
+    const {
+      fullName = '', email = '', phone = '', make = '', model = '', year = '',
+      budget = '', fuel = '', mileage = '', color = '', desc = '',
+    } = req.body || {};
+    if (!fullName || !(email || phone)) return res.status(400).json({ error: 'Vantar nafn og netfang/símanúmer.' });
+    const text = `Ný innflutningsbeiðni af bilsk.is\n\nFullt nafn: ${fullName}\nNetfang: ${email}\nSímanúmer: ${phone}\nTegund: ${make}\nModel: ${model}\nÁrgerð: ${year}\nVerð hugmynd: ${budget ? budget + ' kr.' : ''}\nEldsneyti: ${fuel}\nKeyrður: ${mileage}\nÆskilegur litur: ${color}\n\nLýsing:\n${desc}`;
+    await sendMail({ subject: 'Innflutningsbeiðni - Bílskúrinn', text, replyTo: email });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[/api/import] villa:', err.message);
+    res.status(502).json({ error: 'Gat ekki sent innflutningsbeiðni.' });
+  }
+});
+
+app.post('/api/sell', upload.array('photos', 20), async (req, res) => {
+  if (!checkRateLimit(req.ip)) return res.status(429).json({ error: 'Of margar sendingar - reyndu aftur síðar.' });
+  try {
+    const {
+      fullName = '', email = '', phone = '', plate = '', make = '', model = '',
+      year = '', mileage = '', price = '', extra = '',
+    } = req.body || {};
+    if (!fullName || !(email || phone)) return res.status(400).json({ error: 'Vantar nafn og netfang/símanúmer.' });
+    const files = req.files || [];
+    const text = `Ný sölubeiðni af bilsk.is\n\nFullt nafn: ${fullName}\nNetfang: ${email}\nSímanúmer: ${phone}\nFastanúmer/bílnúmer: ${plate}\nTegund: ${make}\nModel: ${model}\nÁrgerð: ${year}\nAkstur: ${mileage ? mileage + ' km.' : ''}\nÓskað verð: ${price ? price + ' kr.' : ''}\nFjöldi mynda: ${files.length}\n\nViðbótarupplýsingar:\n${extra}`;
+    const attachments = files.map((f) => ({ filename: f.originalname, content: f.buffer }));
+    await sendMail({ subject: 'Beiðni um sölu á bíl - Bílskúrinn', text, attachments, replyTo: email });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[/api/sell] villa:', err.message);
+    res.status(502).json({ error: 'Gat ekki sent sölubeiðni.' });
   }
 });
 
