@@ -86,6 +86,12 @@ const I18N={
     'detail.notFound':'Þessi bíll er ekki lengur til á skrá.',
     'form.error.title':'Eitthvað fór úrskeiðis',
     'form.error.lead':'Ekki tókst að senda - reyndu aftur eða hafðu samband í síma.',
+    'cookie.text':'Þessi vefur notar vefkökur frá Google Analytics til að greina umferð. Viltu leyfa það?',
+    'cookie.accept':'Samþykkja',
+    'cookie.decline':'Hafna',
+    'footer.privacy':'Persónuvernd',
+    'footer.terms':'Skilmálar',
+    'footer.cookieSettings':'Stjórna vefkökum',
     'fuel.Rafmagn':'Rafmagn','fuel.Dísel':'Dísel','fuel.Bensín':'Bensín','fuel.Bensín/Rafmagn':'Bensín/Rafmagn','fuel.PlugInHybrid':'Plug-in Hybrid','fuel.AlvegSama':'Alveg sama',
     'gear.Beinskipting':'Beinskipting','gear.Sjálfskipting':'Sjálfskipting',
     'card.source':'Sýnigögn frá Bílskúrnum á bilasolur.is','card.yearSuffix':'árgerð',
@@ -133,6 +139,12 @@ const I18N={
     'detail.notFound':'This car is no longer listed.',
     'form.error.title':'Something went wrong',
     'form.error.lead':'We couldn\'t send this - please try again or call us.',
+    'cookie.text':'This site uses Google Analytics cookies to measure traffic. Do you accept?',
+    'cookie.accept':'Accept',
+    'cookie.decline':'Decline',
+    'footer.privacy':'Privacy',
+    'footer.terms':'Terms',
+    'footer.cookieSettings':'Cookie settings',
     'fuel.Rafmagn':'Electric','fuel.Dísel':'Diesel','fuel.Bensín':'Petrol','fuel.Bensín/Rafmagn':'Petrol/Electric','fuel.PlugInHybrid':'Plug-in Hybrid','fuel.AlvegSama':"Doesn't matter",
     'gear.Beinskipting':'Manual','gear.Sjálfskipting':'Automatic',
     'card.source':'Demo listing data from Bílskúrinn on bilasolur.is','card.yearSuffix':'model year',
@@ -180,6 +192,12 @@ const I18N={
     'detail.notFound':'Ten samochód nie jest już dostępny.',
     'form.error.title':'Coś poszło nie tak',
     'form.error.lead':'Nie udało się wysłać - spróbuj ponownie lub zadzwoń do nas.',
+    'cookie.text':'Ta strona używa plików cookie Google Analytics do analizy ruchu. Czy akceptujesz?',
+    'cookie.accept':'Akceptuję',
+    'cookie.decline':'Odrzuć',
+    'footer.privacy':'Prywatność',
+    'footer.terms':'Regulamin',
+    'footer.cookieSettings':'Ustawienia plików cookie',
     'fuel.Rafmagn':'Elektryczny','fuel.Dísel':'Diesel','fuel.Bensín':'Benzyna','fuel.Bensín/Rafmagn':'Benzyna/Elektryczny','fuel.PlugInHybrid':'Hybryda plug-in','fuel.AlvegSama':'Bez znaczenia',
     'gear.Beinskipting':'Manualna','gear.Sjálfskipting':'Automatyczna',
     'card.source':'Przykładowe dane od Bílskúrinn na bilasolur.is','card.yearSuffix':'rocznik',
@@ -248,7 +266,30 @@ function header(){
   ];
   return `<header class="header header-nav"><a class="header-logo-link" href="index.html"><img class="header-logo-inline" src="assets/bilskurinn-logo.png" alt="Bílskúrinn"></a><nav class="header-nav-links">${navItems.map(n=>`<a href="${n.href}"${n.key===currentKey?' class="active"':''}>${n.label}</a>`).join('')}</nav>${langSwitchHtml().replace('lang-switch','lang-switch lang-switch-top')}<a class="phone" href="tel:+3545600000">+354 560 0000</a></header>`;
 }
-function footer(){return `<footer class="footer"><div><img class="footer-logo" src="assets/bilskurinn-logo.png"><p>${t('footer.tagline')}</p></div><div><strong>Austurströnd 7, 170 Seltjarnarnes</strong><br>+354 560 0000 · bilskurinn@bilsk.is<br>${t('footer.hours')}</div></footer>`}
+// Google Tag Manager - keyrir aðeins eftir samþykki notanda (sjá vefkökuborða).
+const GTM_CONTAINER_ID = 'GTM-T7B4S8HF';
+function hasCookieConsent(){return localStorage.getItem('cookieConsent')}
+function loadAnalytics(){
+  if(window.__gtmLoaded||!GTM_CONTAINER_ID)return;
+  window.__gtmLoaded=true;
+  window.dataLayer=window.dataLayer||[];
+  window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+  const s=document.createElement('script');
+  s.async=true;
+  s.src='https://www.googletagmanager.com/gtm.js?id='+GTM_CONTAINER_ID;
+  document.head.appendChild(s);
+}
+function cookieBannerHtml(){return `<div class="cookie-banner" id="cookieBanner"><p>${t('cookie.text')}</p><div class="cookie-banner-btns"><button type="button" class="btn" onclick="setCookieConsent('denied')">${t('cookie.decline')}</button><button type="button" class="btn primary" onclick="setCookieConsent('granted')">${t('cookie.accept')}</button></div></div>`}
+function showCookieBanner(){if(document.getElementById('cookieBanner'))return;document.body.insertAdjacentHTML('beforeend',cookieBannerHtml())}
+function hideCookieBanner(){document.getElementById('cookieBanner')?.remove()}
+function setCookieConsent(val){localStorage.setItem('cookieConsent',val);hideCookieBanner();if(val==='granted')loadAnalytics()}
+function openCookieSettings(){localStorage.removeItem('cookieConsent');showCookieBanner()}
+function initCookieConsent(){
+  const c=hasCookieConsent();
+  if(c==='granted')loadAnalytics();
+  else if(c!=='denied')showCookieBanner();
+}
+function footer(){return `<footer class="footer"><div><img class="footer-logo" src="assets/bilskurinn-logo.png"><p>${t('footer.tagline')}</p></div><div><strong>Austurströnd 7, 170 Seltjarnarnes</strong><br>+354 560 0000 · bilskurinn@bilsk.is<br>${t('footer.hours')}</div><div class="footer-legal"><a href="personuvernd.html">${t('footer.privacy')}</a><a href="notkunarskilmalar.html">${t('footer.terms')}</a><a href="javascript:void(0)" onclick="openCookieSettings()">${t('footer.cookieSettings')}</a></div></footer>`}
 function layout(){renderChrome()}
 function renderChrome(){
   document.querySelectorAll('.header,.overlay,.drawer,.footer').forEach(el=>el.remove());
@@ -1154,4 +1195,4 @@ function updateLogos(){
   });
 }
 function observeReveals(){const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')}),{threshold:.12});document.querySelectorAll('.reveal').forEach(el=>obs.observe(el))}
-document.addEventListener('DOMContentLoaded',()=>{addThemeToggle();layout();loadCars();calculatePayout();['search','fuel','sort','kmFrom','kmTo','priceFrom','priceTo','yearFrom','yearTo'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderCars));wireISKField('salePrice','salePriceSuffix',999999999,calculatePayout);wireISKField('payoff','payoffSuffix',999999999,calculatePayout);wireISKField('sellPrice','sellPriceSuffix',999999999);wireISKField('sellMileage','sellMileageSuffix',999999);wireISKField('importBudget','importBudgetSuffix',999999999);document.querySelectorAll('form').forEach(f=>f.addEventListener('submit',fakeSubmit));window.addEventListener('scroll',logoScroll,{passive:true});logoScroll();observeReveals();initBookingDate();renderBookingSlots();initDetailPageContext();renderBookingCarCard();document.getElementById('sellPhotos')?.addEventListener('change',handleSellPhotoChange);updateSellPhotoStatus();if(document.fonts&&document.fonts.ready){document.fonts.ready.then(()=>{positionISKSuffix('salePrice','salePriceSuffix');positionISKSuffix('payoff','payoffSuffix');positionISKSuffix('sellPrice','sellPriceSuffix');positionISKSuffix('sellMileage','sellMileageSuffix');positionISKSuffix('importBudget','importBudgetSuffix')})}initImportFormWidgets()});
+document.addEventListener('DOMContentLoaded',()=>{addThemeToggle();layout();loadCars();initCookieConsent();calculatePayout();['search','fuel','sort','kmFrom','kmTo','priceFrom','priceTo','yearFrom','yearTo'].forEach(id=>document.getElementById(id)?.addEventListener('input',renderCars));wireISKField('salePrice','salePriceSuffix',999999999,calculatePayout);wireISKField('payoff','payoffSuffix',999999999,calculatePayout);wireISKField('sellPrice','sellPriceSuffix',999999999);wireISKField('sellMileage','sellMileageSuffix',999999);wireISKField('importBudget','importBudgetSuffix',999999999);document.querySelectorAll('form').forEach(f=>f.addEventListener('submit',fakeSubmit));window.addEventListener('scroll',logoScroll,{passive:true});logoScroll();observeReveals();initBookingDate();renderBookingSlots();initDetailPageContext();renderBookingCarCard();document.getElementById('sellPhotos')?.addEventListener('change',handleSellPhotoChange);updateSellPhotoStatus();if(document.fonts&&document.fonts.ready){document.fonts.ready.then(()=>{positionISKSuffix('salePrice','salePriceSuffix');positionISKSuffix('payoff','payoffSuffix');positionISKSuffix('sellPrice','sellPriceSuffix');positionISKSuffix('sellMileage','sellMileageSuffix');positionISKSuffix('importBudget','importBudgetSuffix')})}initImportFormWidgets()});
