@@ -47,18 +47,38 @@ const mailTransport = nodemailer.createTransport({
   },
 });
 
-async function sendMail({ subject, text, attachments, replyTo }) {
+async function sendMail({ subject, text, html, attachments, replyTo, fromName }) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
     throw new Error('EMAIL_USER / EMAIL_APP_PASSWORD er ekki stillt í .env');
   }
   await mailTransport.sendMail({
-    from: `Bílskúrinn vefsíða <${process.env.EMAIL_USER}>`,
+    from: `${fromName || 'bilsk.is'} <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
     to: process.env.EMAIL_TO || 'bilskurinn@bilsk.is',
     replyTo: replyTo || undefined,
     subject,
     text,
+    html,
     attachments,
   });
+}
+
+// Litlar hjálparfallanir fyrir fallega HTML-útgáfu af tölvupóstunum (feitletraðir
+// reitir) - text-útgáfan er alltaf send líka sem varaleið fyrir póstforrit sem
+// sýna ekki HTML.
+function escapeHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+function emailRow(label, value) {
+  return `<p style="margin:4px 0"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value) || '-'}</p>`;
+}
+function emailWrapper(intro, rowsHtml, extraLabel, extraValue) {
+  return `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#111">
+<p>${escapeHtml(intro)}</p>
+${rowsHtml}
+${extraLabel ? `<p style="margin:16px 0 4px"><strong>${escapeHtml(extraLabel)}:</strong></p><p style="margin:0;white-space:pre-wrap">${escapeHtml(extraValue)}</p>` : ''}
+</div>`;
 }
 
 // Einföld vörn gegn ruslsendingum: hámark 10 sendingar á 15 mín. á hverja IP-tölu.
@@ -180,7 +200,10 @@ app.post('/api/inquiry', async (req, res) => {
     const { name = '', email = '', phone = '', message = '', carId = '', carName = '' } = req.body || {};
     if (!name || !(email || phone)) return res.status(400).json({ error: 'Vantar nafn og netfang/símanúmer.' });
     const text = `Ný fyrirspurn af bilsk.is\n\nNafn: ${name}\nNetfang: ${email}\nSímanúmer: ${phone}\nBíll: ${carName ? carName + ' (' + carId + ')' : '-'}\n\nSkilaboð:\n${message}`;
-    await sendMail({ subject: `Fyrirspurn um ${carName || 'bíl'} - Bílskúrinn`, text, replyTo: email });
+    const html = emailWrapper('Ný fyrirspurn af bilsk.is',
+      emailRow('Nafn', name) + emailRow('Netfang', email) + emailRow('Símanúmer', phone) + emailRow('Bíll', carName ? carName + ' (' + carId + ')' : '-'),
+      'Skilaboð', message);
+    await sendMail({ subject: `Fyrirspurn um ${carName || 'bíl'} - Bílskúrinn`, text, html, replyTo: email, fromName: 'bilsk.is (fyrirspurn)' });
     res.json({ ok: true });
   } catch (err) {
     console.error('[/api/inquiry] villa:', err.message);
@@ -194,7 +217,9 @@ app.post('/api/booking', async (req, res) => {
     const { name = '', email = '', phone = '', date = '', time = '', carId = '', carName = '' } = req.body || {};
     if (!name || !(email || phone)) return res.status(400).json({ error: 'Vantar nafn og netfang/símanúmer.' });
     const text = `Ný bókun á skoðun af bilsk.is\n\nNafn: ${name}\nNetfang: ${email}\nSímanúmer: ${phone}\nBíll: ${carName ? carName + ' (' + carId + ')' : '-'}\nDagsetning: ${date}\nTímasetning: ${time}`;
-    await sendMail({ subject: `Bókun á skoðun - ${carName || 'bíll'} - Bílskúrinn`, text, replyTo: email });
+    const html = emailWrapper('Ný bókun á skoðun af bilsk.is',
+      emailRow('Nafn', name) + emailRow('Netfang', email) + emailRow('Símanúmer', phone) + emailRow('Bíll', carName ? carName + ' (' + carId + ')' : '-') + emailRow('Dagsetning', date) + emailRow('Tímasetning', time));
+    await sendMail({ subject: `Bókun á skoðun - ${carName || 'bíll'} - Bílskúrinn`, text, html, replyTo: email, fromName: 'bilsk.is (bókun)' });
     res.json({ ok: true });
   } catch (err) {
     console.error('[/api/booking] villa:', err.message);
@@ -211,7 +236,10 @@ app.post('/api/import', async (req, res) => {
     } = req.body || {};
     if (!fullName || !(email || phone)) return res.status(400).json({ error: 'Vantar nafn og netfang/símanúmer.' });
     const text = `Ný innflutningsbeiðni af bilsk.is\n\nFullt nafn: ${fullName}\nNetfang: ${email}\nSímanúmer: ${phone}\nTegund: ${make}\nModel: ${model}\nÁrgerð: ${year}\nVerð hugmynd: ${budget ? budget + ' kr.' : ''}\nEldsneyti: ${fuel}\nKeyrður: ${mileage}\nÆskilegur litur: ${color}\n\nLýsing:\n${desc}`;
-    await sendMail({ subject: 'Innflutningsbeiðni - Bílskúrinn', text, replyTo: email });
+    const html = emailWrapper('Ný innflutningsbeiðni af bilsk.is',
+      emailRow('Fullt nafn', fullName) + emailRow('Netfang', email) + emailRow('Símanúmer', phone) + emailRow('Tegund', make) + emailRow('Model', model) + emailRow('Árgerð', year) + emailRow('Verð hugmynd', budget ? budget + ' kr.' : '') + emailRow('Eldsneyti', fuel) + emailRow('Keyrður', mileage) + emailRow('Æskilegur litur', color),
+      'Lýsing', desc);
+    await sendMail({ subject: 'Innflutningsbeiðni - Bílskúrinn', text, html, replyTo: email, fromName: 'bilsk.is (innflutningur)' });
     res.json({ ok: true });
   } catch (err) {
     console.error('[/api/import] villa:', err.message);
@@ -229,8 +257,11 @@ app.post('/api/sell', upload.array('photos', 20), async (req, res) => {
     if (!fullName || !(email || phone)) return res.status(400).json({ error: 'Vantar nafn og netfang/símanúmer.' });
     const files = req.files || [];
     const text = `Ný sölubeiðni af bilsk.is\n\nFullt nafn: ${fullName}\nNetfang: ${email}\nSímanúmer: ${phone}\nFastanúmer/bílnúmer: ${plate}\nTegund: ${make}\nModel: ${model}\nÁrgerð: ${year}\nAkstur: ${mileage ? mileage + ' km.' : ''}\nÓskað verð: ${price ? price + ' kr.' : ''}\nFjöldi mynda: ${files.length}\n\nViðbótarupplýsingar:\n${extra}`;
+    const html = emailWrapper('Ný sölubeiðni af bilsk.is',
+      emailRow('Fullt nafn', fullName) + emailRow('Netfang', email) + emailRow('Símanúmer', phone) + emailRow('Fastanúmer/bílnúmer', plate) + emailRow('Tegund', make) + emailRow('Model', model) + emailRow('Árgerð', year) + emailRow('Akstur', mileage ? mileage + ' km.' : '') + emailRow('Óskað verð', price ? price + ' kr.' : '') + emailRow('Fjöldi mynda', String(files.length)),
+      'Viðbótarupplýsingar', extra);
     const attachments = files.map((f) => ({ filename: f.originalname, content: f.buffer }));
-    await sendMail({ subject: 'Beiðni um sölu á bíl - Bílskúrinn', text, attachments, replyTo: email });
+    await sendMail({ subject: 'Beiðni um sölu á bíl - Bílskúrinn', text, html, attachments, replyTo: email, fromName: 'bilsk.is (sala)' });
     res.json({ ok: true });
   } catch (err) {
     console.error('[/api/sell] villa:', err.message);

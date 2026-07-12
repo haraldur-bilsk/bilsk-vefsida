@@ -70,6 +70,26 @@ Ný endapunktar sem eyðublöðin á síðunni senda nú á (í stað mailto:):
 `POST /api/import`. Einföld IP-byggð hraðatakmörkun (mest 10 sendingar á 15 mín.
 á hverja IP) er innbyggð til að verjast ruslsendingum.
 
+### Sérstakt sendanda-netfang (EMAIL_FROM)
+
+Ef `bilskurinn@bilsk.is` sendir sjálfum sér tölvupóst birtist sendandinn alltaf
+sem "me" í Gmail-innhólfinu, óháð því hvaða nafn er stillt - þetta er
+Gmail-sértæk hegðun sem ekki er hægt að sniðganga með tölvupóstahausum einum
+saman. Til að fá alvöru sendanda-nafn (t.d. `fyrirspurnir@bilsk.is`) þarf að
+búa til "Send As" samnefni:
+
+1. Skráðu þig inn á `bilskurinn@bilsk.is` hjá Gmail.
+2. Farðu í **Settings (tannhjólið) → See all settings → Accounts and Import**.
+3. Undir "Send mail as" - smelltu á **Add another email address**.
+4. Sláðu inn `fyrirspurnir@bilsk.is` (eða hvaða heiti sem er valið) og fylgdu
+   staðfestingarskrefunum (Gmail sendir staðfestingarpóst - af því allt er
+   sama pósthólf berst hann sjálfkrafa).
+5. Settu `EMAIL_FROM=fyrirspurnir@bilsk.is` í `.env` á netþjóninum og
+   endurræstu bakendann (`systemctl restart bilsk-backend`).
+
+Ef `EMAIL_FROM` er ekki stillt, eða samnefnið er ekki staðfest í Gmail, fellur
+kerfið sjálfkrafa aftur á `EMAIL_USER` (og "me" birtist áfram í eigin innhólfi).
+
 ## Hýsing – lykilatriði
 
 Henry hvítlistar IP-tölu, sem þýðir að hýsingin verður að hafa **fasta
