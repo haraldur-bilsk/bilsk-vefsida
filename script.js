@@ -289,7 +289,7 @@ function initCookieConsent(){
   if(c==='granted')loadAnalytics();
   else if(c!=='denied')showCookieBanner();
 }
-function footer(){return `<footer class="footer"><div><img class="footer-logo" src="bilskurinn-logo.png"><p>${t('footer.tagline')}</p></div><div><strong>Austurströnd 7, 170 Seltjarnarnes</strong><br>+354 560 0000 · bilskurinn@bilsk.is<br>${t('footer.hours')}</div><div class="footer-legal"><a href="personuvernd.html">${t('footer.privacy')}</a><a href="notkunarskilmalar.html">${t('footer.terms')}</a><a href="javascript:void(0)" onclick="openCookieSettings()">${t('footer.cookieSettings')}</a></div></footer>`}
+function footer(){return `<footer class="footer"><div><img class="footer-logo" src="bilskurinn-logo.png"><p>${t('footer.tagline')}</p></div><div class="footer-legal"><a href="personuvernd.html">${t('footer.privacy')}</a><a href="notkunarskilmalar.html">${t('footer.terms')}</a><a href="javascript:void(0)" onclick="openCookieSettings()">${t('footer.cookieSettings')}</a></div><div><strong>Austurströnd 7, 170 Seltjarnarnes</strong><br>+354 560 0000 · bilskurinn@bilsk.is<br>${t('footer.hours')}</div></footer>`}
 function layout(){renderChrome()}
 function renderChrome(){
   document.querySelectorAll('.header,.overlay,.drawer,.footer').forEach(el=>el.remove());
