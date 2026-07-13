@@ -262,9 +262,9 @@ function header(){
     {key:'sell',href:'sell.html',label:t('nav.sellTop')},
     {key:'import',href:'import.html',label:t('nav.import')},
     {key:'about',href:'about.html',label:t('nav.about')},
-    {key:'contact',href:'index.html#contact',label:t('nav.contact')}
+    {key:'contact',href:'/#contact',label:t('nav.contact')}
   ];
-  return `<header class="header header-nav"><a class="header-logo-link" href="index.html"><img class="header-logo-inline" src="bilskurinn-logo.png" alt="Bílskúrinn"></a><nav class="header-nav-links">${navItems.map(n=>`<a href="${n.href}"${n.key===currentKey?' class="active"':''}>${n.label}</a>`).join('')}</nav>${langSwitchHtml().replace('lang-switch','lang-switch lang-switch-top')}<a class="phone" href="tel:+3545600000">+354 560 0000</a></header>`;
+  return `<header class="header header-nav"><a class="header-logo-link" href="/"><img class="header-logo-inline" src="bilskurinn-logo.png" alt="Bílskúrinn"></a><nav class="header-nav-links">${navItems.map(n=>`<a href="${n.href}"${n.key===currentKey?' class="active"':''}>${n.label}</a>`).join('')}</nav>${langSwitchHtml().replace('lang-switch','lang-switch lang-switch-top')}<a class="phone" href="tel:+3545600000">+354 560 0000</a></header>`;
 }
 // Google Tag Manager - keyrir aðeins eftir samþykki notanda (sjá vefkökuborða).
 const GTM_CONTAINER_ID = 'GTM-T7B4S8HF';

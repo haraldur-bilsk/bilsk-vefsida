@@ -51,7 +51,14 @@ Samkvæmt lýsingunni sem þú fékkst:
 
 Í stað þess að opna tölvupóstforrit notandans (`mailto:`), sendir bakendinn nú
 sjálfur tölvupóst á `bilskurinn@bilsk.is` þegar notandi sendir inn eyðublað á
-síðunni. Þetta keyrir í gegnum Gmail/Google Workspace SMTP.
+síðunni.
+
+Ný endapunktar sem eyðublöðin á síðunni senda nú á (í stað mailto:):
+`POST /api/inquiry`, `POST /api/booking`, `POST /api/sell` (með myndaviðhengjum),
+`POST /api/import`. Einföld IP-byggð hraðatakmörkun (mest 10 sendingar á 15 mín.
+á hverja IP) er innbyggð til að verjast ruslsendingum.
+
+Þetta keyrir í gegnum Gmail/Google Workspace SMTP.
 
 Uppsetning (þarf að gera einu sinni):
 
@@ -65,18 +72,21 @@ Uppsetning (þarf að gera einu sinni):
    `EMAIL_USER=bilskurinn@bilsk.is` og `EMAIL_APP_PASSWORD=<16-stafa-lykillinn>`.
 5. Endurræstu bakendann (`systemctl restart bilsk-backend`).
 
-Ný endapunktar sem eyðublöðin á síðunni senda nú á (í stað mailto:):
-`POST /api/inquiry`, `POST /api/booking`, `POST /api/sell` (með myndaviðhengjum),
-`POST /api/import`. Einföld IP-byggð hraðatakmörkun (mest 10 sendingar á 15 mín.
-á hverja IP) er innbyggð til að verjast ruslsendingum.
-
 ### Sérstakt sendanda-netfang (EMAIL_FROM)
 
 Ef `bilskurinn@bilsk.is` sendir sjálfum sér tölvupóst birtist sendandinn alltaf
 sem "me" í Gmail-innhólfinu, óháð því hvaða nafn er stillt - þetta er
 Gmail-sértæk hegðun sem ekki er hægt að sniðganga með tölvupóstahausum einum
-saman. Til að fá alvöru sendanda-nafn (t.d. `fyrirspurnir@bilsk.is`) þarf að
-búa til "Send As" samnefni:
+saman, líka þótt `EMAIL_FROM` sé stillt á samnefni eins og
+`fyrirspurnir@bilsk.is` (Gmail þekkir öll "Send As" samnefni sem "sitt eigið"
+netfang). **Þetta er samþykkt hegðun fyrir þennan vef** - efni póstsins
+(efnislína, feitletruð svæði) sýnir samt skýrt hvers eðlis erindið er.
+
+Ef einhvern tímann á að losna alveg við "me" þarf að senda póstinn í gegnum
+utanaðkomandi þjónustu eins og Resend (https://resend.com) í stað Gmail SMTP -
+þá kemur pósturinn inn sem alvöru utanaðkomandi póstur. Það krefst þess að
+staðfesta lénið `bilsk.is` hjá þeirri þjónustu (nokkrar DNS-færslur til
+viðbótar) og breyta `EMAIL_HOST`/`EMAIL_USER`/`EMAIL_APP_PASSWORD` í `.env`.
 
 1. Skráðu þig inn á `bilskurinn@bilsk.is` hjá Gmail.
 2. Farðu í **Settings (tannhjólið) → See all settings → Accounts and Import**.
@@ -87,8 +97,10 @@ búa til "Send As" samnefni:
 5. Settu `EMAIL_FROM=fyrirspurnir@bilsk.is` í `.env` á netþjóninum og
    endurræstu bakendann (`systemctl restart bilsk-backend`).
 
-Ef `EMAIL_FROM` er ekki stillt, eða samnefnið er ekki staðfest í Gmail, fellur
-kerfið sjálfkrafa aftur á `EMAIL_USER` (og "me" birtist áfram í eigin innhólfi).
+Ný endapunktar sem eyðublöðin á síðunni senda nú á (í stað mailto:):
+`POST /api/inquiry`, `POST /api/booking`, `POST /api/sell` (með myndaviðhengjum),
+`POST /api/import`. Einföld IP-byggð hraðatakmörkun (mest 10 sendingar á 15 mín.
+á hverja IP) er innbyggð til að verjast ruslsendingum.
 
 ## Hýsing – lykilatriði
 
