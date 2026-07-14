@@ -96,6 +96,142 @@ function checkRateLimit(ip) {
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
 
 let cache = { data: null, fetchedAt: 0 };
+let codesCache = { data: null, fetchedAt: 0 };
+// Skjöl Rögg biðja sérstaklega um að kóðar séu ekki sóttir í sífellu - "t.d.
+// einu sinni á dag" er nefnt sem hæfilegt - því er þessi skyndiminni mun
+// lengra en fyrir söluskrána sjálfa.
+const CODES_CACHE_TTL = 24 * 60 * 60 * 1000;
+
+// Staðfest 13.07.2026 út frá alvöru svari: bilasolur.is/Henry XML-svarið er
+// STAÐBUNDIÐ (positional) - <meta fields="ID,EIGANDI,ARGERD,..."/> skilgreinir
+// röð reitanna, og hver <v F0=".." F1=".." .../> hnútur hefur tölusett
+// eigindi sem samsvara þeirri röð. Reitalistinn er LESINN ÚR SVARINU sjálfu í
+// hvert sinn (ekki harðkóðaður) svo kóðinn haldi áfram að virka þó Rögg bæti
+// reitum við eða breyti röðinni.
+function henryFieldNames(meta) {
+  return String(meta?.['@_fields'] || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+// Býr til { ID:'..', EIGANDI:'..', ARGERD:'..', ... } úr einum <v> hnút með
+// því að para F0,F1,F2... við reitalistann.
+function henryVehicleFields(v, fieldNames) {
+  const obj = {};
+  fieldNames.forEach((name, i) => {
+    obj[name] = v[`@_F${i}`];
+  });
+  return obj;
+}
+
+// Byggir myndaslóð út frá {imgurl} sniðmátinu í <meta>, t.d.
+// "https://bilasolur.is/CarImage.aspx?s={v.EXT_BILASALAID}&c={v.ID}&p={p.ID}&w={width}"
+function henryBuildImageUrl(template, fields, photoId, width) {
+  if (!template) return null;
+  return template
+    .replace('{v.EXT_BILASALAID}', encodeURIComponent(fields.EXT_BILASALAID || ''))
+    .replace('{v.ID}', encodeURIComponent(fields.ID || ''))
+    .replace('{p.ID}', encodeURIComponent(photoId || ''))
+    .replace('{width}', String(width || 1200));
+}
+
+// Býr til uppflettitöflu { '3':'ABS hemlakerfi', ... } úr t.d.
+// <aukahlutir><a id="3" n="ABS hemlakerfi"/>...</aukahlutir>
+function henryBuildCodeMap(list) {
+  const map = {};
+  [].concat(list || []).forEach((item) => {
+    const id = item?.['@_id'];
+    if (id !== undefined && id !== null) map[String(id)] = item?.['@_n'] || '';
+  });
+  return map;
+}
+
+// Sækir codes.aspx (systurslóð við get.aspx) og býr til uppflettitöflur fyrir
+// eldsneyti, gírkassategund, drif, lit, flokk (yfirflokk/body) og aukahluti -
+// þessir reitir eru tölukóðar í söluskránni sjálfri.
+async function fetchHenryCodes(baseUrl, apiKey) {
+  const now = Date.now();
+  if (codesCache.data && now - codesCache.fetchedAt < CODES_CACHE_TTL) {
+    return codesCache.data;
+  }
+  const codesUrl = baseUrl.replace(/get\.aspx.*$/, 'codes.aspx');
+  const sep = codesUrl.includes('?') ? '&' : '?';
+  const requestUrl = `${codesUrl}${sep}apikey=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(requestUrl, { headers: { Accept: 'application/xml, text/xml' } });
+  if (!res.ok) {
+    throw new Error(`Henry codes.aspx skilaði villu: ${res.status} ${res.statusText}`);
+  }
+  const xml = await res.text();
+  const json = parser.parse(xml);
+  const d = json?.data || {};
+  const codes = {
+    eldsneyti: henryBuildCodeMap(d.eldsneyti?.e),
+    girartegund: henryBuildCodeMap(d.girartegund?.g),
+    drif: henryBuildCodeMap(d.drif?.d),
+    litir: henryBuildCodeMap(d.litir?.l),
+    flokkar: henryBuildCodeMap(d.flokkar?.f),
+    aukahlutir: henryBuildCodeMap(d.aukahlutir?.a),
+  };
+  codesCache = { data: codes, fetchedAt: now };
+  return codes;
+}
+
+async function fetchHenryPage(baseUrl, apiKey, page) {
+  const sep = baseUrl.includes('?') ? '&' : '?';
+  // Staðfest í skjölum Rögg (v3.2): &page=x sækir tiltekna blaðsíðu og
+  // &pagesize=x stillir fjölda færslna á síðu (sjálfgefið 30, hámark 50).
+  // Notum hámarkið til að lágmarka fjölda fyrirspurna.
+  const requestUrl = `${baseUrl}${sep}apikey=${encodeURIComponent(apiKey)}&page=${page}&pagesize=50`;
+  const res = await fetch(requestUrl, { headers: { Accept: 'application/xml, text/xml' } });
+  if (!res.ok) {
+    throw new Error(`Henry API skilaði villu (síða ${page}): ${res.status} ${res.statusText}`);
+  }
+  const xml = await res.text();
+  return parser.parse(xml);
+}
+
+// Umbreytir einni bíla-færslu (þegar búið er að para F0,F1... við nöfn) yfir
+// í sniðið sem framendinn (script.js -> carCard/renderDetail) notar nú þegar.
+// `codes` er uppflettitöflusettið úr fetchHenryCodes() - þýðir tölukóða
+// (ELDSNEYTI, GIRARTEGUND, DRIF, LITUR, FLOKKUR, AUKAHLUTIR) yfir í texta.
+function mapVehicle(fields, imgUrlTemplate, codes) {
+  const photos = [].concat(fields.__photos || []);
+  const images = photos
+    .slice()
+    .sort((a, b) => Number(a['@_so'] || 0) - Number(b['@_so'] || 0))
+    .map((p) => henryBuildImageUrl(imgUrlTemplate, fields, p['@_id'], 1200))
+    .filter(Boolean);
+
+  const featureIds = String(fields.AUKAHLUTIR || '')
+    .split('$')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  return {
+    id: String(fields.ID || ''),
+    name: [fields.EXT_MODFRAMLEIDANDI, fields.EXT_MODGERD].filter(Boolean).join(' '),
+    year: Number(fields.EXT_ARGERD || fields.ARGERD || 0),
+    km: Number(fields.EXT_EKINNKM || fields.EKINN || 0),
+    // ATH: raunveruleg gildi hér eru t.d. "Bensín","Dísel","Rafmagn","Vetni",
+    // "Metan","Hybrid","Plug-in hybrid" - vefurinn (cars.html) er núna bara
+    // með síuhnappa fyrir "Rafmagn","Dísel","Bensín","Bensín/Rafmagn". Þarf
+    // hugsanlega að uppfæra þá valmöguleika svo þeir passi við alvöru gögnin.
+    fuel: codes.eldsneyti[fields.ELDSNEYTI] || '',
+    gear: codes.girartegund[fields.GIRARTEGUND] || '',
+    drive: codes.drif[fields.DRIF] || '',
+    color: codes.litir[fields.LITUR] || '',
+    price: Number(fields.VERD || 0) * 1000, // VERD er í þúsundum kr. skv. skjölum Rögg
+    brand: fields.EXT_MODFRAMLEIDANDI || '',
+    body: codes.flokkar[fields.FLOKKUR] || '',
+    image: images[0] || null,
+    images,
+    doors: Number(fields.DYR || 0),
+    seats: Number(fields.MANNA || 0),
+    hp: Number(fields.HESTOFL || 0),
+    features: featureIds.map((id) => codes.aukahlutir[id]).filter(Boolean),
+  };
+}
 
 async function fetchHenryFeed() {
   const now = Date.now();
@@ -111,67 +247,41 @@ async function fetchHenryFeed() {
     );
   }
 
-  // TODO: staðfesta hvort APIKEY á að fara í header, query-param eða body.
-  // Algengast hjá svona feed-um er annað af þessu tvennu:
-  //   1) Header:      Authorization: Bearer <APIKEY>   (eða X-API-Key)
-  //   2) Query-param: ?apikey=<APIKEY>&dealerId=<HENRY_DEALER_ID>
-  // Núna er gert ráð fyrir query-param + header samtímis - fjarlægðu það sem á ekki við.
-  const dealerId = process.env.HENRY_DEALER_ID || '';
-  const requestUrl = `${url}${url.includes('?') ? '&' : '?'}apikey=${encodeURIComponent(apiKey)}${dealerId ? `&dealerId=${encodeURIComponent(dealerId)}` : ''}`;
+  const codes = await fetchHenryCodes(url, apiKey);
 
-  const res = await fetch(requestUrl, {
-    headers: {
-      'X-API-Key': apiKey,
-      Accept: 'application/xml, text/xml',
-    },
-  });
+  // Svarið er BLAÐSÍÐUSKIPT (t.d. pages=4, records=96, pagesize=30 í fyrstu
+  // síðunni sem við prófuðum) - við sækjum allar síður og söfnum saman í
+  // einn lista, með varnir gegn tvítekningum ef blaðsíðuskiptingin virkar
+  // ekki nákvæmlega eins og gert er ráð fyrir.
+  const first = await fetchHenryPage(url, apiKey, 1);
+  const meta = first?.data?.meta || {};
+  const totalPages = Number(meta['@_pages'] || 1);
+  const fieldNames = henryFieldNames(meta);
+  const imgUrlTemplate = meta['@_imgurl'] || '';
 
-  if (!res.ok) {
-    throw new Error(`Henry API skilaði villu: ${res.status} ${res.statusText}`);
+  const byId = new Map();
+  const ingestPage = (pageData) => {
+    const nodes = [].concat(pageData?.data?.vs?.v || []);
+    nodes.forEach((v) => {
+      const fields = henryVehicleFields(v, fieldNames);
+      fields.__photos = [].concat(v.ps?.p || []);
+      const car = mapVehicle(fields, imgUrlTemplate, codes);
+      if (car.id) byId.set(car.id, car);
+    });
+  };
+  ingestPage(first);
+  for (let page = 2; page <= totalPages; page++) {
+    ingestPage(await fetchHenryPage(url, apiKey, page));
   }
 
-  const xml = await res.text();
-  const json = parser.parse(xml);
-
-  cache = { data: json, fetchedAt: now };
-  return json;
-}
-
-// Umbreytir einni bíla-færslu úr Henry XML-inu yfir í sniðið sem
-// framendinn (script.js -> carCard/renderDetail) notar nú þegar:
-// { id, name, year, km, fuel, gear, price, brand, body, image, features }
-function mapVehicle(raw) {
-  // TODO: Reitanöfnin hér (raw.Id, raw.Make o.s.frv.) eru ágiskun byggð á
-  // algengum bílasölu-feed-um. Uppfæra um leið og raunverulegt XML-svar
-  // liggur fyrir - einfaldast er að vista eitt raunverulegt svar í
-  // backend/sample-response.xml og bera saman reitanöfn.
-  const images = [].concat(raw.Images?.Image || raw.Photos?.Photo || []);
-  const firstImage = (Array.isArray(images) ? images[0] : images) || null;
-
-  return {
-    id: String(raw.Id ?? raw['@_id'] ?? raw.RegNumber ?? ''),
-    name: [raw.Make, raw.Model, raw.Variant].filter(Boolean).join(' '),
-    year: Number(raw.Year || raw.ModelYear || 0),
-    km: Number(raw.Mileage || raw.Km || 0),
-    fuel: raw.FuelType || raw.Fuel || '',
-    gear: raw.Transmission || raw.Gear || '',
-    price: Number(raw.Price || raw.SalePrice || 0),
-    brand: raw.Make || '',
-    body: raw.BodyType || raw.Body || '',
-    image: (typeof firstImage === 'string' ? firstImage : firstImage?.['#text']) || null,
-    features: [].concat(raw.Equipment?.Item || raw.Features?.Feature || []).filter(Boolean),
-  };
+  const cars = Array.from(byId.values());
+  cache = { data: cars, fetchedAt: now };
+  return cars;
 }
 
 app.get('/api/cars', async (req, res) => {
   try {
-    const feed = await fetchHenryFeed();
-    // TODO: leiðin niður að listanum af bílum (feed.Vehicles.Vehicle) fer eftir
-    // raunverulegu XML-skema. Uppfæra þegar það liggur fyrir.
-    const rawList = [].concat(
-      feed?.Vehicles?.Vehicle || feed?.vehicles?.vehicle || feed?.Cars?.Car || []
-    );
-    const cars = rawList.map(mapVehicle).filter((c) => c.id);
+    const cars = await fetchHenryFeed();
     res.json(cars);
   } catch (err) {
     console.error('[/api/cars] villa:', err.message);
@@ -181,11 +291,8 @@ app.get('/api/cars', async (req, res) => {
 
 app.get('/api/cars/:id', async (req, res) => {
   try {
-    const feed = await fetchHenryFeed();
-    const rawList = [].concat(
-      feed?.Vehicles?.Vehicle || feed?.vehicles?.vehicle || feed?.Cars?.Car || []
-    );
-    const car = rawList.map(mapVehicle).find((c) => c.id === req.params.id);
+    const cars = await fetchHenryFeed();
+    const car = cars.find((c) => c.id === req.params.id);
     if (!car) return res.status(404).json({ error: 'Bíll fannst ekki' });
     res.json(car);
   } catch (err) {
