@@ -231,6 +231,10 @@ function mapVehicle(fields, imgUrlTemplate, codes) {
     seats: Number(fields.MANNA || 0),
     hp: Number(fields.HESTOFL || 0),
     features: featureIds.map((id) => codes.aukahlutir[id]).filter(Boolean),
+    // Skjöl Rögg: "Er ökutæki á staðnum; inniheldur tölugildi ef ökutæki er á
+    // staðnum en er tómt ef ökutæki er ekki á staðnum." - þ.e. SPOT er annað
+    // hvort tómt (ekki á staðnum) eða inniheldur eitthvert tölugildi (á staðnum).
+    inStock: fields.SPOT !== undefined && fields.SPOT !== null && String(fields.SPOT).trim() !== '',
   };
 }
 
