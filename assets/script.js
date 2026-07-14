@@ -792,13 +792,16 @@ function categorizeFeatures(features){
   return result;
 }
 function renderRealFeatures(car){
-  const blocks=[];
   const basics=[];
   if(car.hp) basics.push(`${t('detail.hp')}: ${car.hp} hö.`);
   if(car.doors) basics.push(`${t('detail.doors')}: ${car.doors} stk.`);
   if(car.seats) basics.push(`${t('detail.seats')}: ${car.seats} stk.`);
-  if(basics.length) blocks.push({title:t('detail.basicInfo'),lines:basics});
-  categorizeFeatures((car.features||[]).slice()).forEach(c=>blocks.push({title:c.title,lines:c.lines.map(f=>`✓ ${f}`)}));
+  const blocks=categorizeFeatures((car.features||[]).slice()).map(c=>({title:c.title,lines:c.lines.map(f=>`✓ ${f}`)}));
+  if(basics.length){
+    const engineBlock=blocks.find(b=>b.title==='Vél');
+    if(engineBlock) engineBlock.lines=basics.concat(engineBlock.lines);
+    else blocks.unshift({title:'Vél',lines:basics});
+  }
   if(!blocks.length) return `<div class="spec-cat"><div class="spec-line">${t('detail.noFeatures')}</div></div>`;
   return blocks.map(b=>`<div class="spec-cat"><div class="spec-cat-title">${b.title}</div>${b.lines.map(l=>`<div class="spec-line">${l}</div>`).join('')}</div>`).join('');
 }
