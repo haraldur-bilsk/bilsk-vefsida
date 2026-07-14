@@ -96,6 +96,7 @@ function checkRateLimit(ip) {
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
 
 let cache = { data: null, fetchedAt: 0 };
+let cacheRefreshing = null; // Promise sem er í gangi, ef verið er að endurnýja núna
 let codesCache = { data: null, fetchedAt: 0 };
 // Skjöl Rögg biðja sérstaklega um að kóðar séu ekki sóttir í sífellu - "t.d.
 // einu sinni á dag" er nefnt sem hæfilegt - því er þessi skyndiminni mun
@@ -233,12 +234,11 @@ function mapVehicle(fields, imgUrlTemplate, codes) {
   };
 }
 
-async function fetchHenryFeed() {
-  const now = Date.now();
-  if (cache.data && now - cache.fetchedAt < CACHE_TTL) {
-    return cache.data;
-  }
-
+// Sækir ALLAR síður frá Henry og skilar tilbúnum bílalista. Þetta er "þunga"
+// vinnan - sjálf netföngin til Henry geta tekið smá tíma, sérstaklega þegar
+// margar síður eru sóttar. Sjá fetchHenryFeed() fyrir neðan fyrir hvernig
+// þetta er notað án þess að notandinn þurfi að bíða eftir þessu í hvert sinn.
+async function refreshHenryFeed() {
   const url = process.env.HENRY_API_URL;
   const apiKey = process.env.HENRY_API_KEY;
   if (!url || !apiKey || url.includes('xml-feed-url-hér') || apiKey.includes('set-inn')) {
@@ -270,13 +270,46 @@ async function fetchHenryFeed() {
     });
   };
   ingestPage(first);
-  for (let page = 2; page <= totalPages; page++) {
-    ingestPage(await fetchHenryPage(url, apiKey, page));
+
+  // Sækjum hinar síðurnar SAMHLIÐA (Promise.all) í stað þess að bíða eftir
+  // hverri á fætur annarri - flýtir verulega fyrir þegar bílafjöldi krefst
+  // margra síðna, þar sem Henry-þjónustan getur verið nokkuð sein í svörum.
+  if (totalPages > 1) {
+    const restPages = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) => fetchHenryPage(url, apiKey, i + 2))
+    );
+    restPages.forEach(ingestPage);
   }
 
   const cars = Array.from(byId.values());
-  cache = { data: cars, fetchedAt: now };
+  cache = { data: cars, fetchedAt: Date.now() };
   return cars;
+}
+
+// Skilar núverandi skyndiminni STRAX (jafnvel þótt úrelt sé) og endurnýjar í
+// bakgrunni ef CACHE_TTL er útrunnið - þannig þarf enginn notandi að bíða
+// eftir Henry-svarinu sjálfur nema á allra fyrstu fyrirspurninni eftir að
+// vefþjónninn ræsir (þá er ekkert til í minni ennþá og við verðum að bíða).
+async function fetchHenryFeed() {
+  const now = Date.now();
+  const isStale = !cache.data || now - cache.fetchedAt >= CACHE_TTL;
+
+  if (isStale && !cacheRefreshing) {
+    cacheRefreshing = refreshHenryFeed()
+      .catch((err) => {
+        if (!cache.data) throw err;
+        // Endurnýjun mistókst en við eigum eldri gögn - höldum þeim frekar en
+        // að henda villu framan í notandann.
+        console.error('[fetchHenryFeed] bakgrunns-endurnýjun mistókst, held í eldri gögn:', err.message);
+        return cache.data;
+      })
+      .finally(() => {
+        cacheRefreshing = null;
+      });
+  }
+
+  if (cache.data) return cache.data;
+  return cacheRefreshing;
 }
 
 app.get('/api/cars', async (req, res) => {
