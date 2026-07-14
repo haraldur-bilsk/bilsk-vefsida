@@ -95,7 +95,7 @@ const I18N={
     'fuel.Rafmagn':'Rafmagn','fuel.Dísel':'Dísel','fuel.Bensín':'Bensín','fuel.Bensín/Rafmagn':'Bensín/Rafmagn','fuel.PlugInHybrid':'Plug-in Hybrid','fuel.AlvegSama':'Alveg sama',
     'gear.Beinskipting':'Beinskipting','gear.Sjálfskipting':'Sjálfskipting',
     'card.source':'Sýnigögn frá Bílskúrnum á bilasolur.is','card.yearSuffix':'árgerð',
-    'detail.forSale':'Bíll til sölu','detail.year':'Árgerð','detail.mileage':'Akstur','detail.fuel':'Eldsneyti','detail.gear':'Skipting','detail.brand':'Merki','detail.body':'Yfirbygging','detail.color':'Litur','detail.listedDate':'Skráð á sölu','detail.features':'Helsti búnaður','detail.hp':'Hestöfl','detail.doors':'Dyrafjöldi','detail.seats':'Sætafjöldi','detail.noFeatures':'Enginn frekari búnaður skráður.','detail.basicInfo':'Vél','detail.equipment':'Búnaður','detail.inquire':'Fá frekari upplýsingar','detail.call':'Hringja','detail.bookMeeting':'Bóka hitting','detail.promoLabel':'Flott verð','detail.oldPriceLabel':'Verð áður',
+    'detail.forSale':'Bíll til sölu','detail.year':'Árgerð','detail.mileage':'Akstur','detail.fuel':'Eldsneyti','detail.gear':'Skipting','detail.brand':'Merki','detail.body':'Yfirbygging','detail.color':'Litur','detail.listedDate':'Skráð á sölu','detail.features':'Helsti búnaður','detail.hp':'Hestöfl','detail.doors':'Dyrafjöldi','detail.seats':'Sætafjöldi','detail.noFeatures':'Enginn frekari búnaður skráður.','detail.basicInfo':'Vél','detail.equipment':'Búnaður','detail.otherEquipment':'Annað','detail.inquire':'Fá frekari upplýsingar','detail.call':'Hringja','detail.bookMeeting':'Bóka hitting','detail.promoLabel':'Flott verð','detail.oldPriceLabel':'Verð áður',
     'car.eyebrow':'Bíll til sölu','car.title':'Bíladetail','car.inquiryTitle':'Fá frekari upplýsingar','car.form.notice':'Takk! Fyrirspurnin hefur verið móttekin í þessu prototype.','car.form.submit':'Senda fyrirspurn',
     'cars.eyebrow':'Bílasafn','cars.title':'Bílar til sölu','cars.lead':'Skoðaðu alla bíla sem eru til sölu hjá Bílskúrnum. Sýnigögnin hér eru byggð á upplýsingum af bilasolur.is.',
     'sell.eyebrow':'Seldu bílinn þinn','sell.title':'Seldu bílinn þinn','sell.lead':'Við sjáum um myndatöku, auglýsingar, fyrirspurnir, reynsluakstur og afhendingu.',
@@ -148,7 +148,7 @@ const I18N={
     'fuel.Rafmagn':'Electric','fuel.Dísel':'Diesel','fuel.Bensín':'Petrol','fuel.Bensín/Rafmagn':'Petrol/Electric','fuel.PlugInHybrid':'Plug-in Hybrid','fuel.AlvegSama':"Doesn't matter",
     'gear.Beinskipting':'Manual','gear.Sjálfskipting':'Automatic',
     'card.source':'Demo listing data from Bílskúrinn on bilasolur.is','card.yearSuffix':'model year',
-    'detail.forSale':'Car for sale','detail.year':'Year','detail.mileage':'Mileage','detail.fuel':'Fuel','detail.gear':'Transmission','detail.brand':'Make','detail.body':'Body type','detail.color':'Color','detail.listedDate':'Listed on','detail.features':'Key features','detail.hp':'Horsepower','detail.doors':'Doors','detail.seats':'Seats','detail.noFeatures':'No additional equipment listed.','detail.basicInfo':'Engine','detail.equipment':'Equipment','detail.inquire':'Request further information','detail.call':'Call','detail.bookMeeting':'Book a viewing','detail.promoLabel':'Great price','detail.oldPriceLabel':'Previous price',
+    'detail.forSale':'Car for sale','detail.year':'Year','detail.mileage':'Mileage','detail.fuel':'Fuel','detail.gear':'Transmission','detail.brand':'Make','detail.body':'Body type','detail.color':'Color','detail.listedDate':'Listed on','detail.features':'Key features','detail.hp':'Horsepower','detail.doors':'Doors','detail.seats':'Seats','detail.noFeatures':'No additional equipment listed.','detail.basicInfo':'Engine','detail.equipment':'Equipment','detail.otherEquipment':'Other','detail.inquire':'Request further information','detail.call':'Call','detail.bookMeeting':'Book a viewing','detail.promoLabel':'Great price','detail.oldPriceLabel':'Previous price',
     'car.eyebrow':'Car for sale','car.title':'Car details','car.inquiryTitle':'Get more information','car.form.notice':'Thanks! The inquiry has been received in this prototype.','car.form.submit':'Send inquiry',
     'cars.eyebrow':'Car collection','cars.title':'Cars for sale','cars.lead':'Browse all the cars for sale at Bílskúrinn. The demo data here is based on listings from bilasolur.is.',
     'sell.eyebrow':'Sell your car','sell.title':'Sell your car','sell.lead':'We handle photography, advertising, inquiries, test drives and delivery.',
@@ -201,7 +201,7 @@ const I18N={
     'fuel.Rafmagn':'Elektryczny','fuel.Dísel':'Diesel','fuel.Bensín':'Benzyna','fuel.Bensín/Rafmagn':'Benzyna/Elektryczny','fuel.PlugInHybrid':'Hybryda plug-in','fuel.AlvegSama':'Bez znaczenia',
     'gear.Beinskipting':'Manualna','gear.Sjálfskipting':'Automatyczna',
     'card.source':'Przykładowe dane od Bílskúrinn na bilasolur.is','card.yearSuffix':'rocznik',
-    'detail.forSale':'Samochód na sprzedaż','detail.year':'Rocznik','detail.mileage':'Przebieg','detail.fuel':'Paliwo','detail.gear':'Skrzynia biegów','detail.brand':'Marka','detail.body':'Nadwozie','detail.color':'Kolor','detail.listedDate':'Data ogłoszenia','detail.features':'Najważniejsze wyposażenie','detail.hp':'Moc (KM)','detail.doors':'Liczba drzwi','detail.seats':'Liczba miejsc','detail.noFeatures':'Brak dodatkowego wyposażenia.','detail.basicInfo':'Silnik','detail.equipment':'Wyposażenie','detail.inquire':'Poproś o dalsze informacje','detail.call':'Zadzwoń','detail.bookMeeting':'Umów spotkanie','detail.promoLabel':'Świetna cena','detail.oldPriceLabel':'Poprzednia cena',
+    'detail.forSale':'Samochód na sprzedaż','detail.year':'Rocznik','detail.mileage':'Przebieg','detail.fuel':'Paliwo','detail.gear':'Skrzynia biegów','detail.brand':'Marka','detail.body':'Nadwozie','detail.color':'Kolor','detail.listedDate':'Data ogłoszenia','detail.features':'Najważniejsze wyposażenie','detail.hp':'Moc (KM)','detail.doors':'Liczba drzwi','detail.seats':'Liczba miejsc','detail.noFeatures':'Brak dodatkowego wyposażenia.','detail.basicInfo':'Silnik','detail.equipment':'Wyposażenie','detail.otherEquipment':'Inne','detail.inquire':'Poproś o dalsze informacje','detail.call':'Zadzwoń','detail.bookMeeting':'Umów spotkanie','detail.promoLabel':'Świetna cena','detail.oldPriceLabel':'Poprzednia cena',
     'car.eyebrow':'Samochód na sprzedaż','car.title':'Szczegóły samochodu','car.inquiryTitle':'Uzyskaj więcej informacji','car.form.notice':'Dziękujemy! Zapytanie zostało odebrane w tym prototypie.','car.form.submit':'Wyślij zapytanie',
     'cars.eyebrow':'Kolekcja samochodów','cars.title':'Samochody na sprzedaż','cars.lead':'Przeglądaj wszystkie samochody na sprzedaż w Bílskúrinn. Dane demonstracyjne oparte są na ogłoszeniach z bilasolur.is.',
     'sell.eyebrow':'Sprzedaj swój samochód','sell.title':'Sprzedaj swój samochód','sell.lead':'Zajmujemy się zdjęciami, reklamą, zapytaniami, jazdami próbnymi i dostawą.',
@@ -749,6 +749,48 @@ function renderSpecCategories(car){const pinned=['Vél','Eldsneyti','Rafhlaða']
 // renderDetail() notar renderRealFeatures() hér fyrir neðan í staðinn.
 // renderSpecCategories er skilin eftir ónotuð frekar en eytt, ef hún nýtist
 // aftur síðar - hún hefur engin áhrif á meðan hún er ekki kölluð.
+// Alvöru flokkun aukahluta - fengin beint úr skráningarforminu sem Rögg notar
+// sjálft á bilasolur.is (afritað af notanda 14.07.2026, ökutæki #152992).
+// Henry/codes.aspx skilar sjálft ENGRI flokkun fyrir aukahluti (aðeins id+heiti),
+// svo þetta er handvirk uppfletting nafn->flokkur út frá RAUNVERULEGUM flokkum
+// Rögg - ekki ágiskun. Ef Rögg bætir við nýjum aukahlutum sem eru ekki í þessum
+// lista lenda þeir í "Annað" flokknum í stað þess að detta út.
+const EQUIPMENT_CATEGORIES=[
+  {title:'Vél',items:['Start/stop búnaður','Flækjur','Innspýting','Intercooler','Túrbína','Tölvukubbur']},
+  {title:'Rafhlaða',items:['Vegghleðslustöð','Forhitun rafhlöðu fyrir hleðslu','Hleðslukapall','Hleðslutæki','Hiti í rafhlöðu','Kæling í rafhlöðu']},
+  {title:'Drifrás',items:['Drifhlutföll','Driflæsingar','Framdrifslæsing','No Spin læsing','Diskalæsing','Nafdrif','Tregðutengt mismunadrif']},
+  {title:'Yfirbygging',items:['Upphækkaður','Brettakantar','Stigbretti','Sílsavindskeiðar','Plasthús','Palllok','Klædd skúffa','Þakbogar','Vindskeið','Húddhlíf','Grjótgrind','Fellanlegt þak','Fellanlegt þak (fjarlægjanlegt)','Fellanlegt þak (rafdrifið)','Fellanleg blæja','Fellanleg blæja (fjarlægjanleg)','Fellanleg blæja (rafdrifin)']},
+  {title:'Fjöðrun',items:['Loftpúðafjöðrun','Loftpúðafjöðrun aftan','Stillanleg fjöðrun','Hleðslujafnari']},
+  {title:'Hemlabúnaður',items:['ABS hemlakerfi','Neyðarhemlun','Brekkubremsa upp','Brekkubremsa niður','Rafdrifin handbremsa']},
+  {title:'Hjólabúnaður',items:['4 sumardekk','4 heilsársdekk','4 vetrardekk','4 nagladekk','13" dekk','13" felgur','10% eftir af dekkjum','Álfelgur','Krómfelgur','Auka felgur','Loftþrýstingsskynjarar','Varadekk','Varadekkshlíf','Dekkjaviðgerðasett','Tjakkur']},
+  {title:'Ljósabúnaður',items:['LED aðalljós','Xenon aðalljós','Aðalljós með beygjustýringu','Sjálfvirk há/lág aðalljós','Beygjulýsing','LED dagljós','LED afturljós','Heimkomulýsing','Brottfararlýsing','Kastarar','Kastaragrind','Þokuljós framan','Þokuljós aftan','Þokuljós með beygjustýringu']},
+  {title:'Hurðir',items:['4 dyra','Rennihurð','Rafdrifnar rennihliðarhurðir','Hjólastólaaðgengi','Rafdrifið lok farangursrýmis','Snertilaus opnun farangursrýmis']},
+  {title:'Akstur',items:['Stafrænt mælaborð','Sjónlínuskjár','Aksturstölva','Regnskynjari','Akreinavari','Blindsvæðisvörn','Umferðarskiltanemi','Vaðdýptarvörn','Aðstoð við að leggja í stæði','Spólvörn','Stöðugleikakerfi','Hraðastillir','Skynvæddur hraðastillir','Hraðatakmarkari']},
+  {title:'Öryggi',items:['2 lyklar án fjarstýringar','2 lyklar með fjarstýringu','Þjófavörn','Samlæsingar','Fjarstýrðar samlæsingar','Lykillaust aðgengi','Lykillaus ræsing','Fjarræsing','Nálægðarskynjarar','Fjarlægðarskynjarar framan','Fjarlægðarskynjarar aftan','Bakkmyndavél','360° myndavél','360° nálgunarvarar','Líknarbelgir']},
+  {title:'Dráttarbúnaður',items:['Þyngd hemlaðs eftirvagns 1 kg.','Þyngd óhemlaðs eftirvagns 1 kg.','Þyngd á tengibúnað eftirvagns 1 kg.','Dráttarbeisli','Dráttarkrókur (fastur)','Dráttarkrókur (aftengjanlegur)','Dráttarkrókur (rafmagns)','Dráttarkrókur (raffellanlegur)','Stöðugleikakerfi fyrir eftirvagn','Spil']},
+  {title:'Flutningar',items:['Krani','Lyfta','Glussakerfi','Stóll','Krókheysi','Pallur','Kassi','Hillukerfi']},
+  {title:'Afþreying',items:['Útvarp','Rafdrifið útvarpsloftnet','Segulband','Geislaspilari','Geisladiskamagasín','DVD spilari','MP3 spilari','Sjónvarp','Sjónvarpsloftnet','Gervihnattadiskur','Handfrjáls búnaður','Bluetooth símatenging','Þráðlaus farsímahleðsla','Símalögn','Apple CarPlay','Android Auto','AUX hljóðtengi','Bluetooth hljóðtenging','USB tengi','iPod tengi','HDMI tengi','SD-kortalesari']},
+  {title:'Rúður',items:['Rafdrifnar rúður','Hiti í framrúðu','Filmur','Litað gler','Vindhlífar við rúður','Topplúga','Glertopplúga','Glerþak']},
+  {title:'Stýri',items:['Aðgerðahnappar í stýri','Hiti í stýri','Aflstýri','Veltistýri','Rafstillanlegt stýri','Leðurklætt stýri','Gírskipting í stýri']},
+  {title:'Speglar',items:['Aðfellanlegir hliðarspeglar','Rafdrifnir hliðarspeglar','Minni í hliðarspeglum','Hiti í hliðarspeglum','Birtutengdir hliðarspeglar','Stefnuljós í hliðarspeglum','Birtutengdur baksýnisspegill']},
+  {title:'Miðstöð',items:['Loftkæling','Forhitun á miðstöð','Tveggja svæða miðstöð','Þriggja svæða miðstöð','Fjögurra svæða miðstöð','Olíumiðstöð']},
+  {title:'Sæti',items:['Tauáklæði','Leðuráklæði','Rúskinnáklæði','Leðuráklæði á slitflötum','Rúskinnáklæði á slitflötum','Minni í sæti ökumanns','Kæling í sæti ökumanns','Nudd í sæti ökumanns','Hæðarstillanlegt sæti ökumanns','Rafdrifið sæti ökumanns','Minni í framsætum','Hiti í framsætum','Kæling í framsætum','Nudd í framsætum','Hæðarstillanleg framsæti','Rafdrifin framsæti','Hiti í aftursætum','Kæling í aftursætum','Nudd í aftursætum','Rafdrifin aftursæti','ISOFIX festingar í aftursætum','Armpúði í aftursætum','Höfuðpúðar á aftursætum','Tvískipt aftursæti','Þrískipt aftursæti']},
+  {title:'Ferðalög',items:['GPS staðsetningartæki','Leiðsögukerfi','Talstöð','Loftdæla','Rafmagnstengi 110V','Rafmagnstengi 230V','Sólarsella','Fortjald','Sólskyggni','Vaskur','Salerni','Heitt vatn','Kalt vatn','Ísskápur','Kælibox','Eldavél','Örbylgjuofn','Bökunarofn','Gasgrill','Gaskútur','Auka gaskútur','Auka rafgeymir','Auka bensíntankur','Koja','Þreföld koja']},
+  {title:'Þjónusta',items:['Smurbók','Þjónustubók']},
+];
+const EQUIPMENT_CATEGORY_BY_NAME=(()=>{const m={};EQUIPMENT_CATEGORIES.forEach(cat=>cat.items.forEach(name=>{m[name]=cat.title}));return m})();
+function categorizeFeatures(features){
+  const grouped={};
+  const other=[];
+  features.forEach(f=>{
+    const cat=EQUIPMENT_CATEGORY_BY_NAME[f];
+    if(cat){(grouped[cat]=grouped[cat]||[]).push(f)}
+    else other.push(f);
+  });
+  const result=EQUIPMENT_CATEGORIES.map(c=>c.title).filter(title=>grouped[title]).map(title=>({title,lines:grouped[title]}));
+  if(other.length) result.push({title:t('detail.otherEquipment'),lines:other});
+  return result;
+}
 function renderRealFeatures(car){
   const blocks=[];
   const basics=[];
@@ -756,13 +798,9 @@ function renderRealFeatures(car){
   if(car.doors) basics.push(`${t('detail.doors')}: ${car.doors} stk.`);
   if(car.seats) basics.push(`${t('detail.seats')}: ${car.seats} stk.`);
   if(basics.length) blocks.push({title:t('detail.basicInfo'),lines:basics});
-  const features=(car.features||[]).slice();
-  const cols=3;
-  const chunks=Array.from({length:cols},()=>[]);
-  features.forEach((f,i)=>chunks[i%cols].push(`✓ ${f}`));
-chunks.filter(c=>c.length).forEach((c,i)=>blocks.push({title:i===0?t('detail.equipment'):'',lines:c}));
+  categorizeFeatures((car.features||[]).slice()).forEach(c=>blocks.push({title:c.title,lines:c.lines.map(f=>`✓ ${f}`)}));
   if(!blocks.length) return `<div class="spec-cat"><div class="spec-line">${t('detail.noFeatures')}</div></div>`;
-  return blocks.map(b=>`<div class="spec-cat">${b.title?`<div class="spec-cat-title">${b.title}</div>`:''}${b.lines.map(l=>`<div class="spec-line">${l}</div>`).join('')}</div>`).join('');
+  return blocks.map(b=>`<div class="spec-cat"><div class="spec-cat-title">${b.title}</div>${b.lines.map(l=>`<div class="spec-line">${l}</div>`).join('')}</div>`).join('');
 }
 function renderDetail(){const params=new URLSearchParams(location.search);const car=CARS.find(c=>c.id===params.get('id'))||CARS[0];const el=document.getElementById('detail');if(!el)return;if(!car){el.innerHTML='<p class="lead">'+t('detail.notFound')+'</p>';document.title='Bílskúrinn';return;}document.title=car.name+' | Bílskúrinn';setBrandLogo(document.getElementById('detailBrandLogo'),car.brand);const photos=carPhotos(car);GALLERY=photos;const noPhotoClass=hasPhoto(car)?'':'no-photo';const thumbsHtml=buildThumbsHtml(photos);const promo=carPromo(car);const promoHtml=promo?`<div class="promo-line"><div class="promo-label"><strong>${t('detail.promoLabel')}</strong></div><div class="promo-old">${t('detail.oldPriceLabel')} ${kr(promo.old)}</div></div>`:'';const specCatsHtml=renderRealFeatures(car);const detailSpecItems=[];if(car.year)detailSpecItems.push([t('detail.year'),car.year]);if(car.km)detailSpecItems.push([t('detail.mileage'),km(car.km)]);if(car.fuel)detailSpecItems.push([t('detail.fuel'),tFuel(car.fuel)]);if(car.gear)detailSpecItems.push([t('detail.gear'),tGear(car.gear)]);if(car.color)detailSpecItems.push([t('detail.color'),carColor(car)]);const detailSpecsHtml=detailSpecItems.map(([label,val])=>`<div class="spec"><span>${label}</span>${val}</div>`).join('');const mainArrowsHtml=photos.length>1?`<button type="button" class="main-arrow main-prev" onclick="mainGalleryNav(-1)">‹</button><button type="button" class="main-arrow main-next" onclick="mainGalleryNav(1)">›</button>`:'';el.innerHTML=`<div><div class="gallery-main reveal"><img id="galleryMainImg" class="${noPhotoClass}" src="${photos[0]}" alt="${car.name}" onclick="if(!mainSwiped)openLightbox(MAIN_IDX)">${mainArrowsHtml}</div>${thumbsHtml}<h3>${t('detail.features')}</h3><div class="spec-cats">${specCatsHtml}</div></div><div class="reveal"><div class="detail-heading-row"><div><div class="detail-brand-name">${car.brand}</div><h2>${carModelTrim(car)}</h2></div>${car.inStock?`<span class="instock-pill">${t('filter.inStock')}</span>`:''}</div><div class="price" style="font-size:34px;margin-top:8px">${kr(car.price)}</div>${promoHtml}<div class="specs" style="margin:28px 0">${detailSpecsHtml}</div><div style="margin-top:28px" class="btns"><a href="inquiry?id=${encodeURIComponent(car.id)}" class="btn primary">${t('detail.inquire')}</a><a href="tel:+3545600000" class="btn">${t('detail.call')}</a>${!car.inStock?`<a href="booking?id=${encodeURIComponent(car.id)}" class="btn">${t('detail.bookMeeting')}</a>`:''}</div></div>`;MAIN_IDX=0;initMainSwipe();observeReveals()}
 function setGalleryMain(i){const img=document.getElementById('galleryMainImg');if(!img)return;MAIN_IDX=i;img.src=GALLERY[i];document.querySelectorAll('.gallery-thumbs .thumb-wrap').forEach((t,idx)=>t.classList.toggle('active',idx===i))}
