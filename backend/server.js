@@ -19,6 +19,7 @@ const fetch = require('node-fetch');
 const { XMLParser } = require('fast-xml-parser');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
+const sharp = require('sharp');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,10 +28,39 @@ const CACHE_TTL = Number(process.env.CACHE_TTL_SECONDS || 30) * 1000;
 app.use(cors());
 app.use(express.json());
 
+// ATH: Nginx (proxy fyrir framan þennan bakenda) hefur SITT EIGIÐ hámark á
+// stærð innsendinga (client_max_body_size, sjálfgefið aðeins 1MB!). Ef það er
+// ekki hækkað í nginx-stillingunum sjálfum hafnar nginx myndaupphleðslum
+// LÖNGU áður en þær ná hingað - sjá DEPLOYMENT.md.
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 8 * 1024 * 1024, files: 20 },
+  // Rúmt hámark á HRÁA innsenda mynd - hún er hvort sem er smækkuð/þjöppuð
+  // niður (sjá compressImageForEmail) áður en hún er fest við tölvupóst, svo
+  // þetta þarf bara að rúma upprunalegu myndina úr símanum áður en hún fer í
+  // gegnum þjöppun.
+  limits: { fileSize: 15 * 1024 * 1024, files: 20 },
 });
+
+// Nútíma símamyndir eru oft 5-15MB - allt of stórt til að festa margar
+// slíkar við tölvupóst (Gmail hafnar sendingum yfir ~25MB samtals, og hvert
+// skjal í viðhengi bætir við base64-yfirferð sem stækkar það enn frekar).
+// Þess vegna er sérhver mynd smækkuð/þjöppuð hér áður en hún er fest við
+// póstinn - dugar samt vel fyrir skoðun. Ef þjöppun mistekst af einhverjum
+// ástæðum er upprunalega myndin notuð frekar en að láta senduna mistakast.
+async function compressImageForEmail(buffer, filename) {
+  try {
+    const out = await sharp(buffer)
+      .rotate() // virðir EXIF-snúning úr símum
+      .resize({ width: 1600, withoutEnlargement: true })
+      .jpeg({ quality: 78 })
+      .toBuffer();
+    const base = filename.replace(/\.[^.]+$/, '');
+    return { filename: `${base}.jpg`, content: out };
+  } catch (err) {
+    console.warn(`[compressImageForEmail] gat ekki þjappað ${filename}, nota upprunalegu myndina:`, err.message);
+    return { filename, content: buffer };
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Tölvupóstsending fyrir fyrirspurnir/bókanir/sölu/innflutning - kemur í stað
@@ -404,7 +434,15 @@ app.post('/api/sell', upload.array('photos', 20), async (req, res) => {
     const html = emailWrapper('Ný sölubeiðni af bilsk.is',
       emailRow('Fullt nafn', fullName) + emailRow('Netfang', email) + emailRow('Símanúmer', phone) + emailRow('Fastanúmer/bílnúmer', plate) + emailRow('Tegund', make) + emailRow('Model', model) + emailRow('Árgerð', year) + emailRow('Akstur', mileage ? mileage + ' km.' : '') + emailRow('Óskað verð', price ? price + ' kr.' : '') + emailRow('Fjöldi mynda', String(files.length)),
       'Viðbótarupplýsingar', extra);
-    const attachments = files.map((f) => ({ filename: f.originalname, content: f.buffer }));
+    const attachments = await Promise.all(files.map((f) => compressImageForEmail(f.buffer, f.originalname)));
+    // Öryggisnet fyrir Gmail-mörkin (~25MB samtals á sendingu) - þjöppunin að
+    // ofan dugar nánast alltaf, en ef einhver sendir mjög margar myndir samt
+    // sem áður viljum við skila skýrri villu frekar en að SMTP-sendingin
+    // mistakist með óljósu villuboði.
+    const totalBytes = attachments.reduce((sum, a) => sum + a.content.length, 0);
+    if (totalBytes > 20 * 1024 * 1024) {
+      return res.status(400).json({ error: 'Myndirnar eru samanlagt of stórar til að senda. Prófaðu að fækka myndum.' });
+    }
     await sendMail({ subject: 'Beiðni um sölu á bíl - Bílskúrinn', text, html, attachments, replyTo: email, fromName: 'bilsk.is (sala)' });
     res.json({ ok: true });
   } catch (err) {
@@ -414,6 +452,24 @@ app.post('/api/sell', upload.array('photos', 20), async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+// Villumeðhöndlun fyrir Multer (t.d. mynd yfir stærðarmörkum eða of margar
+// myndir) - ÁN þessarar middleware endar slík villa í sjálfgefinni villusíðu
+// Express (ljótt HTML-svar sem framendinn ræður ekkert við), í stað skýrra
+// JSON-villuboða sem formið á sell.html getur sýnt notandanum.
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'Ein eða fleiri myndir eru of stórar (hámark 15MB á mynd fyrir þjöppun).' });
+    }
+    if (err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ error: 'Of margar myndir valdar.' });
+    }
+    return res.status(400).json({ error: 'Villa við að taka á móti myndum: ' + err.message });
+  }
+  console.error('[óvænt villa]', err);
+  res.status(500).json({ error: 'Óvænt villa kom upp.' });
+});
 
 app.listen(PORT, () => {
   console.log(`Bílskúrinn bakendi keyrir á http://localhost:${PORT}`);

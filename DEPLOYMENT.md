@@ -96,6 +96,12 @@ server {
     root /var/www/bilsk;
     index index.html;
 
+    # ATH: nginx leyfir sjálfgefið aðeins 1MB innsendingar (client_max_body_size).
+    # "Skrá bílinn" formið sendir myndir í gegnum /api/sell - án þessarar línu
+    # hafnar nginx SJÁLFT öllum myndaupphleðslum yfir 1MB, löngu áður en þær ná
+    # til Node-bakendans, og notandinn fær bara óútskýrða villu.
+    client_max_body_size 30M;
+
     location /api/ {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
